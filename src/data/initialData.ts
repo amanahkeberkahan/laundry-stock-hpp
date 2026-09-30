@@ -1,0 +1,205 @@
+import { MasterBarang, Gudang, StockOpname, Pembelian, StockSnapshot } from '../types';
+
+export const initialGudang: Gudang[] = [
+  { id: 'gudang-jemur', nama: 'Gudang Jemur', kode: 'GJ', alamat: '', statusAktif: true },
+  { id: 'gudang-pradhana', nama: 'Pradhana', kode: 'PR', alamat: '', statusAktif: true },
+];
+
+export const initialBarang: MasterBarang[] = [
+  // Chemical
+  { id: 'soft-ungu', nama: 'Soft Ungu', kategori: 'Chemical', subkategori: 'Pelembut', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 5, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-jemur', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'det-biru', nama: 'Det Biru', kategori: 'Chemical', subkategori: 'Detergen', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 5, hargaTerakhir: 20000, hargaRataRata: 20000, lokasiGudang: 'gudang-jemur', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'soft-pink', nama: 'Soft Pink', kategori: 'Chemical', subkategori: 'Pelembut', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 5, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-jemur', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'alkali', nama: 'Alkali', kategori: 'Chemical', subkategori: 'Pembersih', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 3, hargaTerakhir: 35000, hargaRataRata: 35000, lokasiGudang: 'gudang-jemur', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'oxy-boost-5l', nama: 'Oxy Boost 5L', kategori: 'Chemical', subkategori: 'Pembersih', satuanDasar: 'ml', satuanPembelian: 'botol', konversi: [{ fromUnit: 'botol', toUnit: 'ml', factor: 5000 }], minimumStock: 1, hargaTerakhir: 75000, hargaRataRata: 75000, lokasiGudang: 'gudang-jemur', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'oxy-boost-1l', nama: 'Oxy Boost 1L', kategori: 'Chemical', subkategori: 'Pembersih', satuanDasar: 'ml', satuanPembelian: 'botol', konversi: [{ fromUnit: 'botol', toUnit: 'ml', factor: 1000 }], minimumStock: 2, hargaTerakhir: 20000, hargaRataRata: 20000, lokasiGudang: 'gudang-jemur', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'sour-neutralizer', nama: 'Sour Neutralizer 5L', kategori: 'Chemical', subkategori: 'Pelembut', satuanDasar: 'ml', satuanPembelian: 'botol', konversi: [{ fromUnit: 'botol', toUnit: 'ml', factor: 5000 }], minimumStock: 1, hargaTerakhir: 60000, hargaRataRata: 60000, lokasiGudang: 'gudang-jemur', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'parfum-florence', nama: 'Parfum Florence 5L', kategori: 'Chemical', subkategori: 'Parfum', satuanDasar: 'ml', satuanPembelian: 'botol', konversi: [{ fromUnit: 'botol', toUnit: 'ml', factor: 5000 }], minimumStock: 2, hargaTerakhir: 85000, hargaRataRata: 85000, lokasiGudang: 'gudang-jemur', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'pelicin-sakura', nama: 'Pelicin Sakura 1L', kategori: 'Chemical', subkategori: 'Pelicin', satuanDasar: 'ml', satuanPembelian: 'botol', konversi: [{ fromUnit: 'botol', toUnit: 'ml', factor: 1000 }], minimumStock: 3, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-jemur', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'rinso-cleaner', nama: 'Rinso Cleaner 3 sachet', kategori: 'Chemical', subkategori: 'Pembersih', satuanDasar: 'pack', satuanPembelian: 'pack', konversi: [{ fromUnit: 'pack', toUnit: 'pcs', factor: 3 }], minimumStock: 2, hargaTerakhir: 8000, hargaRataRata: 8000, lokasiGudang: 'gudang-jemur', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'detol-cleaner', nama: 'Detol Cleaner 250ml', kategori: 'Chemical', subkategori: 'Pembersih', satuanDasar: 'ml', satuanPembelian: 'botol', konversi: [{ fromUnit: 'botol', toUnit: 'ml', factor: 250 }], minimumStock: 2, hargaTerakhir: 15000, hargaRataRata: 15000, lokasiGudang: 'gudang-jemur', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'proclin-putih', nama: 'Proclin Pemutih 12 sachet', kategori: 'Chemical', subkategori: 'Pemutih', satuanDasar: 'bungkus', satuanPembelian: 'bungkus', konversi: [{ fromUnit: 'bungkus', toUnit: 'sachet', factor: 12 }], minimumStock: 3, hargaTerakhir: 12000, hargaRataRata: 12000, lokasiGudang: 'gudang-jemur', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'proclin-warna', nama: 'Proclin Warna 24 sachet', kategori: 'Chemical', subkategori: 'Pewangi', satuanDasar: 'bungkus', satuanPembelian: 'bungkus', konversi: [{ fromUnit: 'bungkus', toUnit: 'sachet', factor: 24 }], minimumStock: 2, hargaTerakhir: 18000, hargaRataRata: 18000, lokasiGudang: 'gudang-jemur', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  // Hanger
+  { id: 'hanger-baju', nama: 'Hanger Baju', kategori: 'Hanger', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'gross', konversi: [{ fromUnit: 'gross', toUnit: 'pcs', factor: 144 }], minimumStock: 100, hargaTerakhir: 1500, hargaRataRata: 1500, lokasiGudang: 'gudang-jemur', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'hanger-pakaian', nama: 'Hanger Pakaian', kategori: 'Hanger', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'lusin', konversi: [{ fromUnit: 'lusin', toUnit: 'pcs', factor: 12 }], minimumStock: 100, hargaTerakhir: 2000, hargaRataRata: 2000, lokasiGudang: 'gudang-jemur', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'hanger-celana', nama: 'Hanger Celana', kategori: 'Hanger', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 20, hargaTerakhir: 2500, hargaRataRata: 2500, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  // Plastik
+  { id: 'nett-besar', nama: 'Nett Besar', kategori: 'Plastik', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 5, hargaTerakhir: 5000, hargaRataRata: 5000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'nett-kecil', nama: 'Nett Kecil', kategori: 'Plastik', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 5, hargaTerakhir: 3000, hargaRataRata: 3000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'plastik-kerah', nama: 'Plastik Kerah', kategori: 'Plastik', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 50, hargaTerakhir: 500, hargaRataRata: 500, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'karton-baju', nama: 'Karton Baju', kategori: 'Plastik', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 10, hargaTerakhir: 3000, hargaRataRata: 3000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'plastik-jinjing-30', nama: 'Plastik Jinjing Size 30', kategori: 'Packaging', subkategori: 'Plastik Jinjing', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 20, hargaTerakhir: 300, hargaRataRata: 300, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'plastik-jinjing-35', nama: 'Plastik Jinjing Size 35', kategori: 'Packaging', subkategori: 'Plastik Jinjing', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 20, hargaTerakhir: 350, hargaRataRata: 350, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'plastik-jinjing-40', nama: 'Plastik Jinjing Size 40', kategori: 'Packaging', subkategori: 'Plastik Jinjing', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 30, hargaTerakhir: 400, hargaRataRata: 400, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'plastik-jinjing-45', nama: 'Plastik Jinjing Size 45', kategori: 'Packaging', subkategori: 'Plastik Jinjing', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 30, hargaTerakhir: 450, hargaRataRata: 450, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'plastik-jinjing-50', nama: 'Plastik Jinjing Size 50', kategori: 'Packaging', subkategori: 'Plastik Jinjing', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 25, hargaTerakhir: 500, hargaRataRata: 500, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'plastik-jinjing-60', nama: 'Plastik Jinjing Size 60', kategori: 'Packaging', subkategori: 'Plastik Jinjing', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 20, hargaTerakhir: 600, hargaRataRata: 600, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'plastik-sprei', nama: 'Plastik Sprei', kategori: 'Packaging', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 10, hargaTerakhir: 1000, hargaRataRata: 1000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'plastik-klip-sepatu', nama: 'Plastik Klip Sepatu', kategori: 'Packaging', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 10, hargaTerakhir: 800, hargaRataRata: 800, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  // Peralatan
+  { id: 'silica-gel', nama: 'Silica Gel', kategori: 'Peralatan', subkategori: '', satuanDasar: 'kg', satuanPembelian: 'kg', konversi: [], minimumStock: 1, hargaTerakhir: 15000, hargaRataRata: 15000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'sikat-suede', nama: 'Sikat Suede', kategori: 'Peralatan', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 2, hargaTerakhir: 10000, hargaRataRata: 10000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'sikat-besar', nama: 'Sikat Besar', kategori: 'Peralatan', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 3, hargaTerakhir: 8000, hargaRataRata: 8000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'kuas', nama: 'Kuas', kategori: 'Peralatan', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 2, hargaTerakhir: 5000, hargaRataRata: 5000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'vivacare', nama: 'Vivacare', kategori: 'Chemical', subkategori: 'Pewangi', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 2, hargaTerakhir: 30000, hargaRataRata: 30000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'botol-parfum', nama: 'Botol Parfum', kategori: 'Packaging', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 5, hargaTerakhir: 3000, hargaRataRata: 3000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'kepala-sprei', nama: 'Kepala Sprei', kategori: 'Lainnya', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 5, hargaTerakhir: 5000, hargaRataRata: 5000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'sari-lerak', nama: 'Sari Lerak', kategori: 'Chemical', subkategori: 'Pembersih', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 2, hargaTerakhir: 20000, hargaRataRata: 20000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'sikat-gigi', nama: 'Sikat Gigi', kategori: 'Peralatan', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 5, hargaTerakhir: 5000, hargaRataRata: 5000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  // Stain Wash
+  { id: 'stain-karat', nama: 'Stain Wash - Karat', kategori: 'Chemical', subkategori: 'Stain Wash', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 1, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'stain-saos', nama: 'Stain Wash - Saos', kategori: 'Chemical', subkategori: 'Stain Wash', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 1, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'stain-kunyit', nama: 'Stain Wash - Kunyit', kategori: 'Chemical', subkategori: 'Stain Wash', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 1, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'stain-kerah', nama: 'Stain Wash - Kerah', kategori: 'Chemical', subkategori: 'Stain Wash', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 1, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'stain-darah', nama: 'Stain Wash - Darah', kategori: 'Chemical', subkategori: 'Stain Wash', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 1, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'stain-deodorant', nama: 'Stain Wash - Deodorant', kategori: 'Chemical', subkategori: 'Stain Wash', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 1, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'stain-minyak', nama: 'Stain Wash - Minyak', kategori: 'Chemical', subkategori: 'Stain Wash', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 1, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'stain-jamur', nama: 'Stain Wash - Jamur', kategori: 'Chemical', subkategori: 'Stain Wash', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 1, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'stain-luntur', nama: 'Stain Wash - Luntur', kategori: 'Chemical', subkategori: 'Stain Wash', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 1, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'stain-tinta', nama: 'Stain Wash - Tinta', kategori: 'Chemical', subkategori: 'Stain Wash', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 1, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'stain-sour', nama: 'Stain Wash - Sour', kategori: 'Chemical', subkategori: 'Stain Wash', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 1, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'stain-colorsol', nama: 'Stain Wash - Colorsol', kategori: 'Chemical', subkategori: 'Stain Wash', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 1, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'stain-ferrol', nama: 'Stain Wash - Ferrol', kategori: 'Chemical', subkategori: 'Stain Wash', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 1, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'stain-blutol', nama: 'Stain Wash - Blutol', kategori: 'Chemical', subkategori: 'Stain Wash', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 1, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'stain-serbuk-ajaib', nama: 'Stain Wash - Serbuk Ajaib', kategori: 'Chemical', subkategori: 'Stain Wash', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 1, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  // Lainnya
+  { id: 'wipol', nama: 'Wipol', kategori: 'Lainnya', subkategori: '', satuanDasar: 'pack', satuanPembelian: 'pack', konversi: [], minimumStock: 2, hargaTerakhir: 12000, hargaRataRata: 12000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'plastik-satuan-roll', nama: 'Plastik Satuan Roll', kategori: 'Packaging', subkategori: '', satuanDasar: 'roll', satuanPembelian: 'roll', konversi: [], minimumStock: 3, hargaTerakhir: 15000, hargaRataRata: 15000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  // ATK
+  { id: 'solasi', nama: 'Solasi', kategori: 'ATK', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 5, hargaTerakhir: 5000, hargaRataRata: 5000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'kertas-nota-1ply', nama: 'Kertas Nota 1 Ply', kategori: 'ATK', subkategori: '', satuanDasar: 'rim', satuanPembelian: 'rim', konversi: [], minimumStock: 5, hargaTerakhir: 45000, hargaRataRata: 45000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'kertas-nota-2ply', nama: 'Kertas Nota 2 Ply', kategori: 'ATK', subkategori: '', satuanDasar: 'rim', satuanPembelian: 'rim', konversi: [], minimumStock: 5, hargaTerakhir: 55000, hargaRataRata: 55000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'kas-buku-tunai', nama: 'Kas Buku Tunai', kategori: 'ATK', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 2, hargaTerakhir: 15000, hargaRataRata: 15000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'kas-buku-nontunai', nama: 'Kas Buku Non Tunai', kategori: 'ATK', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 2, hargaTerakhir: 15000, hargaRataRata: 15000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'keranjang-hijau', nama: 'Keranjang Hijau', kategori: 'Peralatan', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 10, hargaTerakhir: 35000, hargaRataRata: 35000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'keranjang-merah', nama: 'Keranjang Merah', kategori: 'Peralatan', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 10, hargaTerakhir: 35000, hargaRataRata: 35000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'roll-print', nama: 'Roll Print', kategori: 'ATK', subkategori: '', satuanDasar: 'roll', satuanPembelian: 'roll', konversi: [], minimumStock: 3, hargaTerakhir: 25000, hargaRataRata: 25000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'spidol-permanent', nama: 'Spidol Permanent', kategori: 'ATK', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 3, hargaTerakhir: 8000, hargaRataRata: 8000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'spidol-whiteboard', nama: 'Spidol White Board', kategori: 'ATK', subkategori: '', satuanDasar: 'pcs', satuanPembelian: 'pcs', konversi: [], minimumStock: 3, hargaTerakhir: 10000, hargaRataRata: 10000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+  { id: 'roll-baju', nama: 'Roll Baju', kategori: 'ATK', subkategori: '', satuanDasar: 'roll', satuanPembelian: 'roll', konversi: [], minimumStock: 2, hargaTerakhir: 20000, hargaRataRata: 20000, lokasiGudang: 'gudang-pradhana', statusAktif: true, createdAt: '2026-09-01', updatedAt: '2026-09-01' },
+];
+
+// Initial stock snapshots for September 2026 (Stock Opname 28 September 2026)
+export const initialStockSnapshots: StockSnapshot[] = [
+  // Gudang Jemur - Stock Akhir September 2026
+  { barangId: 'soft-ungu', gudangId: 'gudang-jemur', periode: '2026-09', quantity: 37, nilaiTotal: 925000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'det-biru', gudangId: 'gudang-jemur', periode: '2026-09', quantity: 38, nilaiTotal: 760000, hargaRataRata: 20000, tanggal: '2026-09-28' },
+  { barangId: 'soft-pink', gudangId: 'gudang-jemur', periode: '2026-09', quantity: 19, nilaiTotal: 475000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'alkali', gudangId: 'gudang-jemur', periode: '2026-09', quantity: 9, nilaiTotal: 315000, hargaRataRata: 35000, tanggal: '2026-09-28' },
+  { barangId: 'oxy-boost-5l', gudangId: 'gudang-jemur', periode: '2026-09', quantity: 5000, nilaiTotal: 75000, hargaRataRata: 75000, tanggal: '2026-09-28' },
+  { barangId: 'oxy-boost-1l', gudangId: 'gudang-jemur', periode: '2026-09', quantity: 3000, nilaiTotal: 60000, hargaRataRata: 20000, tanggal: '2026-09-28' },
+  { barangId: 'sour-neutralizer', gudangId: 'gudang-jemur', periode: '2026-09', quantity: 5000, nilaiTotal: 60000, hargaRataRata: 60000, tanggal: '2026-09-28' },
+  { barangId: 'parfum-florence', gudangId: 'gudang-jemur', periode: '2026-09', quantity: 30000, nilaiTotal: 510000, hargaRataRata: 85000, tanggal: '2026-09-28' },
+  { barangId: 'pelicin-sakura', gudangId: 'gudang-jemur', periode: '2026-09', quantity: 8000, nilaiTotal: 200000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'rinso-cleaner', gudangId: 'gudang-jemur', periode: '2026-09', quantity: 2, nilaiTotal: 16000, hargaRataRata: 8000, tanggal: '2026-09-28' },
+  { barangId: 'detol-cleaner', gudangId: 'gudang-jemur', periode: '2026-09', quantity: 250, nilaiTotal: 15000, hargaRataRata: 15000, tanggal: '2026-09-28' },
+  { barangId: 'proclin-putih', gudangId: 'gudang-jemur', periode: '2026-09', quantity: 8, nilaiTotal: 96000, hargaRataRata: 12000, tanggal: '2026-09-28' },
+  { barangId: 'proclin-warna', gudangId: 'gudang-jemur', periode: '2026-09', quantity: 3.5, nilaiTotal: 63000, hargaRataRata: 18000, tanggal: '2026-09-28' },
+  { barangId: 'hanger-baju', gudangId: 'gudang-jemur', periode: '2026-09', quantity: 1152, nilaiTotal: 1728000, hargaRataRata: 1500, tanggal: '2026-09-28' },
+  { barangId: 'hanger-pakaian', gudangId: 'gudang-jemur', periode: '2026-09', quantity: 300, nilaiTotal: 600000, hargaRataRata: 2000, tanggal: '2026-09-28' },
+  // Gudang Pradhana - Stock Opname 28 September 2026
+  { barangId: 'det-biru', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 0, nilaiTotal: 0, hargaRataRata: 20000, tanggal: '2026-09-28' },
+  { barangId: 'soft-ungu', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 0, nilaiTotal: 0, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'parfum-florence', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 1000, nilaiTotal: 17000, hargaRataRata: 85000, tanggal: '2026-09-28' },
+  { barangId: 'hanger-baju', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 21, nilaiTotal: 31500, hargaRataRata: 1500, tanggal: '2026-09-28' },
+  { barangId: 'hanger-celana', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 5, nilaiTotal: 12500, hargaRataRata: 2500, tanggal: '2026-09-28' },
+  { barangId: 'nett-besar', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 0, nilaiTotal: 0, hargaRataRata: 5000, tanggal: '2026-09-28' },
+  { barangId: 'nett-kecil', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 8, nilaiTotal: 24000, hargaRataRata: 3000, tanggal: '2026-09-28' },
+  { barangId: 'plastik-kerah', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 100, nilaiTotal: 50000, hargaRataRata: 500, tanggal: '2026-09-28' },
+  { barangId: 'karton-baju', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 0, nilaiTotal: 0, hargaRataRata: 3000, tanggal: '2026-09-28' },
+  { barangId: 'silica-gel', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 1, nilaiTotal: 15000, hargaRataRata: 15000, tanggal: '2026-09-28' },
+  { barangId: 'sikat-suede', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 1, nilaiTotal: 10000, hargaRataRata: 10000, tanggal: '2026-09-28' },
+  { barangId: 'sikat-besar', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 4, nilaiTotal: 32000, hargaRataRata: 8000, tanggal: '2026-09-28' },
+  { barangId: 'kuas', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 2, nilaiTotal: 10000, hargaRataRata: 5000, tanggal: '2026-09-28' },
+  { barangId: 'proclin-putih', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 6, nilaiTotal: 72000, hargaRataRata: 12000, tanggal: '2026-09-28' },
+  { barangId: 'proclin-warna', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 2, nilaiTotal: 36000, hargaRataRata: 18000, tanggal: '2026-09-28' },
+  { barangId: 'alkali', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 0, nilaiTotal: 0, hargaRataRata: 35000, tanggal: '2026-09-28' },
+  { barangId: 'vivacare', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 2, nilaiTotal: 60000, hargaRataRata: 30000, tanggal: '2026-09-28' },
+  { barangId: 'oxy-boost-5l', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 0, nilaiTotal: 0, hargaRataRata: 75000, tanggal: '2026-09-28' },
+  { barangId: 'botol-parfum', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 13, nilaiTotal: 39000, hargaRataRata: 3000, tanggal: '2026-09-28' },
+  { barangId: 'kepala-sprei', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 0, nilaiTotal: 0, hargaRataRata: 5000, tanggal: '2026-09-28' },
+  { barangId: 'sari-lerak', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 0, nilaiTotal: 0, hargaRataRata: 20000, tanggal: '2026-09-28' },
+  { barangId: 'sikat-gigi', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 8, nilaiTotal: 40000, hargaRataRata: 5000, tanggal: '2026-09-28' },
+  { barangId: 'stain-karat', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 2, nilaiTotal: 50000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'stain-saos', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 1, nilaiTotal: 25000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'stain-kunyit', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 1, nilaiTotal: 25000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'stain-kerah', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 1, nilaiTotal: 25000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'stain-darah', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 1, nilaiTotal: 25000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'stain-deodorant', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 1, nilaiTotal: 25000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'stain-minyak', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 1, nilaiTotal: 25000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'stain-jamur', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 1, nilaiTotal: 25000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'stain-luntur', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 1, nilaiTotal: 25000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'stain-tinta', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 2, nilaiTotal: 50000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'stain-sour', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 2, nilaiTotal: 50000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'stain-colorsol', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 1, nilaiTotal: 25000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'stain-ferrol', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 1, nilaiTotal: 25000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'stain-blutol', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 1, nilaiTotal: 25000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'stain-serbuk-ajaib', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 1, nilaiTotal: 25000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'wipol', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 2, nilaiTotal: 24000, hargaRataRata: 12000, tanggal: '2026-09-28' },
+  { barangId: 'plastik-jinjing-30', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 41, nilaiTotal: 12300, hargaRataRata: 300, tanggal: '2026-09-28' },
+  { barangId: 'plastik-jinjing-35', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 28, nilaiTotal: 9800, hargaRataRata: 350, tanggal: '2026-09-28' },
+  { barangId: 'plastik-jinjing-40', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 66, nilaiTotal: 26400, hargaRataRata: 400, tanggal: '2026-09-28' },
+  { barangId: 'plastik-jinjing-45', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 72, nilaiTotal: 32400, hargaRataRata: 450, tanggal: '2026-09-28' },
+  { barangId: 'plastik-jinjing-50', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 53, nilaiTotal: 26500, hargaRataRata: 500, tanggal: '2026-09-28' },
+  { barangId: 'plastik-jinjing-60', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 37, nilaiTotal: 22200, hargaRataRata: 600, tanggal: '2026-09-28' },
+  { barangId: 'plastik-satuan-roll', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 8, nilaiTotal: 120000, hargaRataRata: 15000, tanggal: '2026-09-28' },
+  { barangId: 'plastik-sprei', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 0, nilaiTotal: 0, hargaRataRata: 1000, tanggal: '2026-09-28' },
+  { barangId: 'plastik-klip-sepatu', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 0, nilaiTotal: 0, hargaRataRata: 800, tanggal: '2026-09-28' },
+  { barangId: 'solasi', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 17, nilaiTotal: 85000, hargaRataRata: 5000, tanggal: '2026-09-28' },
+  { barangId: 'kertas-nota-1ply', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 15, nilaiTotal: 675000, hargaRataRata: 45000, tanggal: '2026-09-28' },
+  { barangId: 'kertas-nota-2ply', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 19, nilaiTotal: 1045000, hargaRataRata: 55000, tanggal: '2026-09-28' },
+  { barangId: 'kas-buku-tunai', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 3, nilaiTotal: 45000, hargaRataRata: 15000, tanggal: '2026-09-28' },
+  { barangId: 'kas-buku-nontunai', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 3, nilaiTotal: 45000, hargaRataRata: 15000, tanggal: '2026-09-28' },
+  { barangId: 'keranjang-hijau', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 58, nilaiTotal: 2030000, hargaRataRata: 35000, tanggal: '2026-09-28' },
+  { barangId: 'keranjang-merah', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 47, nilaiTotal: 1645000, hargaRataRata: 35000, tanggal: '2026-09-28' },
+  { barangId: 'roll-print', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 5, nilaiTotal: 125000, hargaRataRata: 25000, tanggal: '2026-09-28' },
+  { barangId: 'spidol-permanent', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 3, nilaiTotal: 24000, hargaRataRata: 8000, tanggal: '2026-09-28' },
+  { barangId: 'spidol-whiteboard', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 4, nilaiTotal: 40000, hargaRataRata: 10000, tanggal: '2026-09-28' },
+  { barangId: 'roll-baju', gudangId: 'gudang-pradhana', periode: '2026-09', quantity: 3, nilaiTotal: 60000, hargaRataRata: 20000, tanggal: '2026-09-28' },
+];
+
+export const initialStockOpname: StockOpname[] = [
+  {
+    id: 'so-sep-2026-jemur',
+    periode: '2026-09',
+    tanggal: '2026-09-28',
+    gudangId: 'gudang-jemur',
+    petugas: 'Admin',
+    items: initialBarang.filter(b => b.lokasiGudang === 'gudang-jemur').map(b => {
+      const snap = initialStockSnapshots.find(s => s.barangId === b.id && s.gudangId === 'gudang-jemur');
+      return {
+        barangId: b.id,
+        stockSistem: snap?.quantity || 0,
+        stockFisik: snap?.quantity || 0,
+        selisih: 0,
+        catatan: ''
+      };
+    }),
+    status: 'finalized',
+    createdAt: '2026-09-28T10:00:00',
+    updatedAt: '2026-09-28T10:00:00'
+  },
+  {
+    id: 'so-sep-2026-pradhana',
+    periode: '2026-09',
+    tanggal: '2026-09-28',
+    gudangId: 'gudang-pradhana',
+    petugas: 'Admin',
+    items: initialBarang.filter(b => b.lokasiGudang === 'gudang-pradhana').map(b => {
+      const snap = initialStockSnapshots.find(s => s.barangId === b.id && s.gudangId === 'gudang-pradhana');
+      return {
+        barangId: b.id,
+        stockSistem: snap?.quantity || 0,
+        stockFisik: snap?.quantity || 0,
+        selisih: 0,
+        catatan: ''
+      };
+    }),
+    status: 'finalized',
+    createdAt: '2026-09-28T10:00:00',
+    updatedAt: '2026-09-28T10:00:00'
+  }
+];
+
+export const initialPembelian: Pembelian[] = [];
