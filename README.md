@@ -300,4 +300,4 @@ Untuk pertanyaan dan bantuan:
 
 ---
 
-**Dibuat dengan ❤️ untuk membantu bisnis laundry Indonesia**
+**Dibuat dengan ❤️ untuk membantu bisnis laundry Indonesia **
