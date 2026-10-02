@@ -7,6 +7,7 @@ import type {
   StockSnapshot,
   AuditLog,
   PeriodClosing,
+  Transfer,
 } from '../types';
 
 // ============================================
@@ -353,6 +354,82 @@ export const auditService = {
       .select('*')
       .order('timestamp', { ascending: false })
       .limit(100);
+    return { data, error };
+  },
+};
+
+// ============================================
+// TRANSFER SERVICE
+// ============================================
+export const transferService = {
+  async getAll() {
+    const { data, error } = await supabase
+      .from('transfers')
+      .select(`
+        *,
+        items:transfer_items(*)
+      `)
+      .order('tanggal', { ascending: false });
+    return { data, error };
+  },
+
+  async create(transfer: Transfer) {
+    const { data: transferData, error: transferError } = await supabase
+      .from('transfers')
+      .insert([{
+        id: transfer.id,
+        nomor_transfer: transfer.nomorTransfer,
+        tanggal: transfer.tanggal,
+        gudang_asal_id: transfer.gudangAsalId,
+        gudang_tujuan_id: transfer.gudangTujuanId,
+        petugas: transfer.petugas,
+        status: transfer.status,
+        catatan: transfer.catatan,
+        created_by: transfer.createdBy,
+      }])
+      .select()
+      .single();
+
+    if (transferError) return { data: null, error: transferError };
+
+    const items = transfer.items.map(item => ({
+      transfer_id: transfer.id,
+      barang_id: item.barangId,
+      quantity: item.quantity,
+      satuan: item.satuan,
+      quantity_dasar: item.quantityDasar,
+      catatan: item.catatan,
+    }));
+
+    const { error: itemsError } = await supabase
+      .from('transfer_items')
+      .insert(items);
+
+    return { data: transferData, error: itemsError };
+  },
+
+  async updateStatus(id: string, status: 'pending' | 'in_transit' | 'completed' | 'cancelled') {
+    const { data, error } = await supabase
+      .from('transfers')
+      .update({ status })
+      .eq('id', id)
+      .select()
+      .single();
+    return { data, error };
+  },
+
+  async completeTransfer(id: string) {
+    const { data, error } = await supabase.rpc('complete_transfer', { transfer_id_param: id });
+    return { data, error };
+  },
+
+  async cancel(id: string) {
+    const { data, error } = await supabase
+      .from('transfers')
+      .update({ status: 'cancelled' })
+      .eq('id', id)
+      .select()
+      .single();
     return { data, error };
   },
 };

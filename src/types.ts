@@ -122,6 +122,32 @@ export interface PeriodClosing {
   status: 'closed' | 'open';
 }
 
+export interface TransferItem {
+  id: string;
+  transferId: string;
+  barangId: string;
+  quantity: number;
+  satuan: string;
+  quantityDasar: number;
+  catatan: string;
+  createdAt: string;
+}
+
+export interface Transfer {
+  id: string;
+  nomorTransfer: string;
+  tanggal: string;
+  gudangAsalId: string;
+  gudangTujuanId: string;
+  petugas: string;
+  status: 'pending' | 'in_transit' | 'completed' | 'cancelled';
+  items: TransferItem[];
+  catatan: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type UserRole = 'admin' | 'staff_gudang' | 'finance' | 'owner';
 
 export interface User {
@@ -131,4 +157,4 @@ export interface User {
   aktif: boolean;
 }
 
-export type PageType = 'dashboard' | 'stock' | 'stock-opname' | 'pembelian' | 'master-barang' | 'gudang' | 'laporan-hpp' | 'laporan-stock' | 'closing' | 'settings';
+export type PageType = 'dashboard' | 'stock' | 'stock-opname' | 'pembelian' | 'transfer' | 'master-barang' | 'gudang' | 'laporan-hpp' | 'laporan-stock' | 'closing' | 'settings';

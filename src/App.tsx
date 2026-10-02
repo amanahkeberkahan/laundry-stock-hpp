@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import MasterBarangPage from './pages/MasterBarang';
 import StockOpnamePage from './pages/StockOpname';
 import PembelianPage from './pages/Pembelian';
+import TransferPage from './pages/Transfer';
 import LaporanHPPPage from './pages/LaporanHPP';
 import LaporanStockPage from './pages/LaporanStock';
 import { GudangPage, ClosingPage, SettingsPage } from './pages/OtherPages';
@@ -15,6 +16,7 @@ import {
   Package,
   ClipboardCheck,
   ShoppingCart,
+  ArrowRightLeft,
   FileText,
   Warehouse,
   BarChart3,
@@ -34,6 +36,7 @@ const NAV_ITEMS: { id: PageType; label: string; icon: any }[] = [
   { id: 'stock', label: 'Stock', icon: Boxes },
   { id: 'stock-opname', label: 'Stock Opname', icon: ClipboardCheck },
   { id: 'pembelian', label: 'Pembelian', icon: ShoppingCart },
+  { id: 'transfer', label: 'Transfer Gudang', icon: ArrowRightLeft },
   { id: 'master-barang', label: 'Master Barang', icon: Package },
   { id: 'gudang', label: 'Gudang', icon: Warehouse },
   { id: 'laporan-hpp', label: 'Laporan HPP', icon: BarChart3 },
@@ -150,6 +153,7 @@ function AppContent() {
       case 'stock': return <LaporanStockPage />;
       case 'stock-opname': return <StockOpnamePage />;
       case 'pembelian': return <PembelianPage />;
+      case 'transfer': return <TransferPage />;
       case 'master-barang': return <MasterBarangPage />;
       case 'gudang': return <GudangPage />;
       case 'laporan-hpp': return <LaporanHPPPage />;

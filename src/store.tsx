@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode, useState } from 'react';
-import { MasterBarang, Gudang, StockOpname, Pembelian, StockSnapshot, AuditLog, PeriodClosing, PageType, UserRole } from './types';
+import { MasterBarang, Gudang, StockOpname, Pembelian, StockSnapshot, AuditLog, PeriodClosing, Transfer, PageType, UserRole } from './types';
 import { initialBarang, initialGudang, initialStockSnapshots, initialStockOpname, initialPembelian } from './data/initialData';
 import { isSupabaseConfigured } from './lib/supabase';
 import * as dbService from './services/database';
@@ -9,6 +9,7 @@ interface AppState {
   gudang: Gudang[];
   stockOpname: StockOpname[];
   pembelian: Pembelian[];
+  transfers: Transfer[];
   stockSnapshots: StockSnapshot[];
   auditLogs: AuditLog[];
   periodClosings: PeriodClosing[];
@@ -36,6 +37,9 @@ type Action =
   | { type: 'UPDATE_STOCK_OPNAME'; payload: StockOpname }
   | { type: 'ADD_PEMBELIAN'; payload: Pembelian }
   | { type: 'VOID_PEMBELIAN'; payload: string }
+  | { type: 'ADD_TRANSFER'; payload: Transfer }
+  | { type: 'UPDATE_TRANSFER'; payload: Transfer }
+  | { type: 'CANCEL_TRANSFER'; payload: string }
   | { type: 'ADD_STOCK_SNAPSHOT'; payload: StockSnapshot }
   | { type: 'ADD_STOCK_SNAPSHOTS'; payload: StockSnapshot[] }
   | { type: 'ADD_AUDIT_LOG'; payload: AuditLog }
@@ -46,6 +50,7 @@ const initialState: AppState = {
   gudang: initialGudang,
   stockOpname: initialStockOpname,
   pembelian: initialPembelian,
+  transfers: [],
   stockSnapshots: initialStockSnapshots,
   auditLogs: [],
   periodClosings: [],
@@ -89,6 +94,12 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, pembelian: [...state.pembelian, action.payload] };
     case 'VOID_PEMBELIAN':
       return { ...state, pembelian: state.pembelian.map(p => p.id === action.payload ? { ...p, status: 'void' as const } : p) };
+    case 'ADD_TRANSFER':
+      return { ...state, transfers: [...state.transfers, action.payload] };
+    case 'UPDATE_TRANSFER':
+      return { ...state, transfers: state.transfers.map(t => t.id === action.payload.id ? action.payload : t) };
+    case 'CANCEL_TRANSFER':
+      return { ...state, transfers: state.transfers.map(t => t.id === action.payload ? { ...t, status: 'cancelled' as const } : t) };
     case 'ADD_STOCK_SNAPSHOT':
       return { ...state, stockSnapshots: [...state.stockSnapshots, action.payload] };
     case 'ADD_STOCK_SNAPSHOTS':
@@ -167,11 +178,37 @@ export function AppProvider({ children }: { children: ReactNode }) {
             tanggal: s.tanggal,
           }));
 
+          const transferRes = await dbService.transferService.getAll();
+          const transfers: Transfer[] = (transferRes.data || []).map((t: any) => ({
+            id: t.id,
+            nomorTransfer: t.nomor_transfer,
+            tanggal: t.tanggal,
+            gudangAsalId: t.gudang_asal_id,
+            gudangTujuanId: t.gudang_tujuan_id,
+            petugas: t.petugas,
+            status: t.status,
+            items: (t.items || []).map((i: any) => ({
+              id: i.id,
+              transferId: i.transfer_id,
+              barangId: i.barang_id,
+              quantity: i.quantity,
+              satuan: i.satuan,
+              quantityDasar: i.quantity_dasar,
+              catatan: i.catatan || '',
+              createdAt: i.created_at,
+            })),
+            catatan: t.catatan || '',
+            createdBy: t.created_by,
+            createdAt: t.created_at,
+            updatedAt: t.updated_at,
+          }));
+
           dispatch({
             type: 'LOAD_DATA',
             payload: {
               gudang: gudang.length > 0 ? gudang : initialGudang,
               barang: barang.length > 0 ? barang : initialBarang,
+              transfers: transfers.length > 0 ? transfers : [],
               stockSnapshots: stockSnapshots.length > 0 ? stockSnapshots : initialStockSnapshots,
               isSupabaseMode: true,
             }
