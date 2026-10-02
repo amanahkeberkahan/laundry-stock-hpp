@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode, useState } from 'react';
-import { MasterBarang, Gudang, StockOpname, Pembelian, StockSnapshot, AuditLog, PeriodClosing, Transfer, PageType, UserRole } from './types';
+import { MasterBarang, Gudang, StockOpname, Pembelian, StockSnapshot, AuditLog, PeriodClosing, Transfer, Adjustment, PageType, UserRole } from './types';
 import { initialBarang, initialGudang, initialStockSnapshots, initialStockOpname, initialPembelian } from './data/initialData';
 import { isSupabaseConfigured } from './lib/supabase';
 import * as dbService from './services/database';
@@ -10,6 +10,7 @@ interface AppState {
   stockOpname: StockOpname[];
   pembelian: Pembelian[];
   transfers: Transfer[];
+  adjustments: Adjustment[];
   stockSnapshots: StockSnapshot[];
   auditLogs: AuditLog[];
   periodClosings: PeriodClosing[];
@@ -40,6 +41,10 @@ type Action =
   | { type: 'ADD_TRANSFER'; payload: Transfer }
   | { type: 'UPDATE_TRANSFER'; payload: Transfer }
   | { type: 'CANCEL_TRANSFER'; payload: string }
+  | { type: 'ADD_ADJUSTMENT'; payload: Adjustment }
+  | { type: 'UPDATE_ADJUSTMENT'; payload: Adjustment }
+  | { type: 'APPROVE_ADJUSTMENT'; payload: { id: string; approvedBy: string } }
+  | { type: 'REJECT_ADJUSTMENT'; payload: { id: string; rejectedBy: string; reason: string } }
   | { type: 'ADD_STOCK_SNAPSHOT'; payload: StockSnapshot }
   | { type: 'ADD_STOCK_SNAPSHOTS'; payload: StockSnapshot[] }
   | { type: 'ADD_AUDIT_LOG'; payload: AuditLog }
@@ -51,6 +56,7 @@ const initialState: AppState = {
   stockOpname: initialStockOpname,
   pembelian: initialPembelian,
   transfers: [],
+  adjustments: [],
   stockSnapshots: initialStockSnapshots,
   auditLogs: [],
   periodClosings: [],
@@ -100,6 +106,28 @@ function reducer(state: AppState, action: Action): AppState {
       return { ...state, transfers: state.transfers.map(t => t.id === action.payload.id ? action.payload : t) };
     case 'CANCEL_TRANSFER':
       return { ...state, transfers: state.transfers.map(t => t.id === action.payload ? { ...t, status: 'cancelled' as const } : t) };
+    case 'ADD_ADJUSTMENT':
+      return { ...state, adjustments: [...state.adjustments, action.payload] };
+    case 'UPDATE_ADJUSTMENT':
+      return { ...state, adjustments: state.adjustments.map(a => a.id === action.payload.id ? action.payload : a) };
+    case 'APPROVE_ADJUSTMENT':
+      return {
+        ...state,
+        adjustments: state.adjustments.map(a =>
+          a.id === action.payload.id
+            ? { ...a, status: 'approved' as const, disetujuiOleh: action.payload.approvedBy, tanggalPersetujuan: new Date().toISOString() }
+            : a
+        )
+      };
+    case 'REJECT_ADJUSTMENT':
+      return {
+        ...state,
+        adjustments: state.adjustments.map(a =>
+          a.id === action.payload.id
+            ? { ...a, status: 'rejected' as const, disetujuiOleh: action.payload.rejectedBy, tanggalPersetujuan: new Date().toISOString(), catatan: a.catatan + '\n[DITOLAK] ' + action.payload.reason }
+            : a
+        )
+      };
     case 'ADD_STOCK_SNAPSHOT':
       return { ...state, stockSnapshots: [...state.stockSnapshots, action.payload] };
     case 'ADD_STOCK_SNAPSHOTS':

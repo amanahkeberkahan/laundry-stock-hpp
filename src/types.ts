@@ -148,6 +148,35 @@ export interface Transfer {
   updatedAt: string;
 }
 
+export interface AdjustmentItem {
+  id: string;
+  adjustmentId: string;
+  barangId: string;
+  quantitySebelum: number;
+  quantitySesudah: number;
+  selisih: number;
+  alasan: string;
+  catatan: string;
+  createdAt: string;
+}
+
+export interface Adjustment {
+  id: string;
+  nomorAdjustment: string;
+  tanggal: string;
+  gudangId: string;
+  tipe: 'stock_opname' | 'kerusakan' | 'kehilangan' | 'kesalahan_catat' | 'lainnya';
+  status: 'pending' | 'approved' | 'rejected';
+  petugas: string;
+  disetujuiOleh?: string;
+  tanggalPersetujuan?: string;
+  items: AdjustmentItem[];
+  catatan: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type UserRole = 'admin' | 'staff_gudang' | 'finance' | 'owner';
 
 export interface User {
@@ -157,4 +186,4 @@ export interface User {
   aktif: boolean;
 }
 
-export type PageType = 'dashboard' | 'stock' | 'stock-opname' | 'pembelian' | 'transfer' | 'master-barang' | 'gudang' | 'laporan-hpp' | 'laporan-stock' | 'closing' | 'settings';
+export type PageType = 'dashboard' | 'stock' | 'stock-opname' | 'pembelian' | 'transfer' | 'adjustment' | 'master-barang' | 'gudang' | 'laporan-hpp' | 'laporan-stock' | 'closing' | 'settings';

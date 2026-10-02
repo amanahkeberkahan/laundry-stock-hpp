@@ -8,6 +8,7 @@ import type {
   AuditLog,
   PeriodClosing,
   Transfer,
+  Adjustment,
 } from '../types';
 
 // ============================================
@@ -427,6 +428,87 @@ export const transferService = {
     const { data, error } = await supabase
       .from('transfers')
       .update({ status: 'cancelled' })
+      .eq('id', id)
+      .select()
+      .single();
+    return { data, error };
+  },
+};
+
+// ============================================
+// ADJUSTMENT SERVICE
+// ============================================
+export const adjustmentService = {
+  async getAll() {
+    const { data, error } = await supabase
+      .from('adjustments')
+      .select(`
+        *,
+        items:adjustment_items(*)
+      `)
+      .order('tanggal', { ascending: false });
+    return { data, error };
+  },
+
+  async create(adjustment: Adjustment) {
+    const { data: adjustmentData, error: adjustmentError } = await supabase
+      .from('adjustments')
+      .insert([{
+        id: adjustment.id,
+        nomor_adjustment: adjustment.nomorAdjustment,
+        tanggal: adjustment.tanggal,
+        gudang_id: adjustment.gudangId,
+        tipe: adjustment.tipe,
+        status: adjustment.status,
+        petugas: adjustment.petugas,
+        catatan: adjustment.catatan,
+        created_by: adjustment.createdBy,
+      }])
+      .select()
+      .single();
+
+    if (adjustmentError) return { data: null, error: adjustmentError };
+
+    const items = adjustment.items.map(item => ({
+      adjustment_id: adjustment.id,
+      barang_id: item.barangId,
+      quantity_sebelum: item.quantitySebelum,
+      quantity_sesudah: item.quantitySesudah,
+      selisih: item.selisih,
+      alasan: item.alasan,
+      catatan: item.catatan,
+    }));
+
+    const { error: itemsError } = await supabase
+      .from('adjustment_items')
+      .insert(items);
+
+    return { data: adjustmentData, error: itemsError };
+  },
+
+  async approve(id: string, approvedBy: string) {
+    const { data, error } = await supabase
+      .from('adjustments')
+      .update({
+        status: 'approved',
+        disetujui_oleh: approvedBy,
+        tanggal_persetujuan: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    return { data, error };
+  },
+
+  async reject(id: string, rejectedBy: string, reason: string) {
+    const { data, error } = await supabase
+      .from('adjustments')
+      .update({
+        status: 'rejected',
+        disetujui_oleh: rejectedBy,
+        tanggal_persetujuan: new Date().toISOString(),
+        catatan: reason,
+      })
       .eq('id', id)
       .select()
       .single();
