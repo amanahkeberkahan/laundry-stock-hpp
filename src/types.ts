@@ -69,6 +69,7 @@ export interface Pembelian {
   totalDiskon: number;
   pajak: number;
   total: number;
+  paymentAccount?: string;
   fotoNota?: string;
   catatan: string;
   status: 'active' | 'void';
@@ -186,4 +187,4 @@ export interface User {
   aktif: boolean;
 }
 
-export type PageType = 'dashboard' | 'stock' | 'stock-opname' | 'pembelian' | 'transfer' | 'adjustment' | 'master-barang' | 'gudang' | 'laporan-hpp' | 'laporan-stock' | 'closing' | 'settings';
+export type PageType = 'dashboard' | 'stock' | 'stock-opname' | 'pembelian' | 'transfer' | 'adjustment' | 'master-barang' | 'gudang' | 'laporan-hpp' | 'laporan-stock' | 'closing' | 'settings' | 'finance-transactions' | 'finance-reconciliation' | 'finance-reports' | 'finance-coa' | 'assets' | 'journals' | 'ledger' | 'trial' | 'accounts' | 'movements' | 'stock-card' | 'usage' | 'finance-draft';

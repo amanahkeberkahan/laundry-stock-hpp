@@ -1,17 +1,20 @@
 import React, { useState } from 'react';
 import { useApp } from '../store';
+import { useBooks } from '../books';
+import { isSupabaseConfigured } from '../lib/supabase';
 import { Warehouse, Lock, Unlock, Settings as SettingsIcon, Upload, Download, RefreshCw } from 'lucide-react';
 
 export function GudangPage() {
   const { state, dispatch, addAuditLog } = useApp();
+  const {commitAction}=useBooks();
   const [showForm, setShowForm] = useState(false);
   const [nama, setNama] = useState('');
   const [kode, setKode] = useState('');
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!nama || !kode) { alert('Lengkapi data gudang!'); return; }
     const gudang = { id: 'gudang-' + Date.now(), nama, kode, alamat: '', statusAktif: true };
-    dispatch({ type: 'ADD_GUDANG', payload: gudang });
+    try{await commitAction({type:'ADD_GUDANG',payload:gudang});}catch(e){alert(e instanceof Error?e.message:'Simpan gagal');return;}
     addAuditLog('CREATE', 'gudang', gudang.id, null, gudang);
     setShowForm(false);
     setNama('');
@@ -73,15 +76,16 @@ export function GudangPage() {
 
 export function ClosingPage() {
   const { state, dispatch, addAuditLog, isPeriodClosed } = useApp();
-  const [selectedPeriode, setSelectedPeriode] = useState('2026-09');
+  const {commitAction}=useBooks();
+  const [selectedPeriode, setSelectedPeriode] = useState(state.selectedPeriode);
   const [selectedGudang, setSelectedGudang] = useState(state.gudang[0]?.id || '');
 
-  const handleClosing = () => {
+  const handleClosing = async () => {
     if (isPeriodClosed(selectedPeriode, selectedGudang)) {
       alert('Periode ini sudah ditutup!');
       return;
     }
-    if (!confirm(`Tutup buku ${selectedPeriode} untuk ${state.gudang.find(g => g.id === selectedGudang)?.nama}?\n\nSetelah ditutup, data tidak dapat diubah.`)) return;
+    if (!confirm(`Tutup seluruh jurnal dan mutasi perusahaan pada ${selectedPeriode}?\n\nSetelah ditutup, data tidak dapat diubah.`)) return;
 
     const closing = {
       id: 'close-' + Date.now(),
@@ -91,9 +95,9 @@ export function ClosingPage() {
       closedBy: state.currentUser.nama,
       status: 'closed' as const,
     };
-    dispatch({ type: 'CLOSE_PERIOD', payload: closing });
+    try{await commitAction({type:'CLOSE_PERIOD',payload:closing});}catch(e){alert(e instanceof Error?e.message:'Closing gagal');return;}
     addAuditLog('CLOSE_PERIOD', 'period_closing', closing.id, null, closing);
-    alert('Periode berhasil ditutup!');
+    alert('Periode ditutup untuk seluruh jurnal perusahaan dan mutasi stok.');
   };
 
   return (
@@ -105,8 +109,8 @@ export function ClosingPage() {
 
       <div className="bg-red-50 border border-red-200 rounded-xl p-4">
         <p className="text-sm text-red-700">
-          <strong>Peringatan:</strong> Setelah periode ditutup, stock opname dan pembelian tidak dapat diedit. 
-          Koreksi harus dilakukan melalui Adjustment dengan alasan dan approval.
+          <strong>Peringatan:</strong> Closing mengunci seluruh jurnal dan mutasi stok perusahaan pada bulan terpilih. Stock opname dan pembelian tidak dapat diedit.
+          Selesaikan rekonsiliasi dan draft terlebih dahulu. Koreksi memakai periode terbuka melalui Adjustment atau jurnal pembalik.
         </p>
       </div>
 
@@ -157,15 +161,17 @@ export function ClosingPage() {
 
 export function SettingsPage() {
   const { state, dispatch } = useApp();
+  const {book,exportBackup,restoreBackup}=useBooks();
   const [userName, setUserName] = useState(state.currentUser.nama);
   const [userRole, setUserRole] = useState(state.currentUser.role);
 
   const handleSaveUser = () => {
-    dispatch({ type: 'SET_USER', payload: { nama: userName, role: userRole as any } });
+    dispatch({type:'SET_USER',payload:{nama:userName,role:isSupabaseConfigured()?state.currentUser.role:userRole as any}});
     alert('Pengaturan disimpan!');
   };
 
   const handleResetData = () => {
+    if(book){alert('Buku aktif harus dipertahankan. Gunakan jurnal koreksi dan backup terintegrasi.');return;}
     if (confirm('Reset semua data ke kondisi awal? Semua data yang sudah diinput akan hilang!')) {
       localStorage.removeItem('laundry-stock-hpp');
       window.location.reload();
@@ -173,6 +179,7 @@ export function SettingsPage() {
   };
 
   const handleExportData = () => {
+    if(book){exportBackup();return;}
     const data = {
       barang: state.barang,
       gudang: state.gudang,
@@ -191,13 +198,15 @@ export function SettingsPage() {
   };
 
   const handleImportData = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if(book){alert('Impor stok lama tidak boleh mengganti histori buku aktif. Gunakan transaksi pembelian / saldo awal / penyesuaian.');e.target.value='';return;}
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
         const data = JSON.parse(ev.target?.result as string);
-        dispatch({ type: 'LOAD_DATA', payload: data });
+        if(data.books){void restoreBackup(data).then(()=>alert('Backup terintegrasi berhasil dipulihkan.')).catch(e=>alert(e.message));return;}
+        dispatch({ type: 'LOAD_DATA', payload: Object.fromEntries(['barang','gudang','stockOpname','pembelian','stockSnapshots','auditLogs','periodClosings'].filter(k=>Array.isArray(data[k])).map(k=>[k,data[k]])) });
         alert('Data berhasil diimport!');
       } catch {
         alert('File tidak valid!');
@@ -222,7 +231,7 @@ export function SettingsPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-            <select value={userRole} onChange={e => setUserRole(e.target.value as any)} className="w-full border rounded-lg px-3 py-2 text-sm">
+            <select disabled={isSupabaseConfigured()} value={userRole} onChange={e => setUserRole(e.target.value as any)} className="w-full border rounded-lg px-3 py-2 text-sm">
               <option value="admin">Admin</option>
               <option value="staff_gudang">Staff Gudang</option>
               <option value="finance">Finance</option>

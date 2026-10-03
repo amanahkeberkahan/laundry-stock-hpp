@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../store';
+import { useBooks } from '../books';
 import { MasterBarang } from '../types';
 import { Plus, Search, Edit2, Trash2, X } from 'lucide-react';
 
@@ -7,6 +8,7 @@ const KATEGORI_OPTIONS = ['Chemical', 'Hanger', 'Plastik', 'ATK', 'Peralatan', '
 
 export default function MasterBarangPage() {
   const { state, dispatch, addAuditLog } = useApp();
+  const {commitAction}=useBooks();
   const [search, setSearch] = useState('');
   const [filterKategori, setFilterKategori] = useState('');
   const [showForm, setShowForm] = useState(false);
@@ -35,11 +37,11 @@ export default function MasterBarangPage() {
     setShowForm(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const now = new Date().toISOString();
     if (editingItem) {
       const updated = { ...editingItem, ...formData, updatedAt: now } as MasterBarang;
-      dispatch({ type: 'UPDATE_BARANG', payload: updated });
+      try{await commitAction({ type: 'UPDATE_BARANG', payload: updated });}catch(e){alert(e instanceof Error?e.message:'Simpan gagal');return;}
       addAuditLog('UPDATE', 'barang', updated.id, editingItem, updated);
     } else {
       const newItem: MasterBarang = {
@@ -58,17 +60,17 @@ export default function MasterBarangPage() {
         createdAt: now,
         updatedAt: now,
       };
-      dispatch({ type: 'ADD_BARANG', payload: newItem });
+      try{await commitAction({ type: 'ADD_BARANG', payload: newItem });}catch(e){alert(e instanceof Error?e.message:'Simpan gagal');return;}
       addAuditLog('CREATE', 'barang', newItem.id, null, newItem);
     }
     setShowForm(false);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Nonaktifkan barang ini?')) {
       const item = state.barang.find(b => b.id === id);
       if (item) {
-        dispatch({ type: 'UPDATE_BARANG', payload: { ...item, statusAktif: false, updatedAt: new Date().toISOString() } });
+        try{await commitAction({ type: 'UPDATE_BARANG', payload: { ...item, statusAktif: false, updatedAt: new Date().toISOString() } });}catch(e){alert(e instanceof Error?e.message:'Simpan gagal');return;}
         addAuditLog('DEACTIVATE', 'barang', id, item, { ...item, statusAktif: false });
       }
     }

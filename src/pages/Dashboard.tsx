@@ -1,16 +1,20 @@
 import React from 'react';
 import { useApp } from '../store';
+import { useBooks } from '../books';
+import { inventoryCheck, monthEnd } from '../lib/accounting';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { AlertTriangle, Package, ShoppingCart, TrendingDown, DollarSign, AlertCircle } from 'lucide-react';
 
 export default function Dashboard() {
   const { state, dispatch, getCurrentStock } = useApp();
+  const {book}=useBooks();
   const periode = state.selectedPeriode;
 
   // Calculate dashboard metrics
   const getStockAwalTotal = () => {
     // Stock awal = stock akhir bulan sebelumnya (we don't have Aug data, so show N/A)
-    return null; // DATA BELUM LENGKAP - no August data
+    if(book){const d=new Date(periode+'-01T00:00:00Z');d.setUTCDate(d.getUTCDate()-1);return inventoryCheck(book,d.toISOString().slice(0,10)).stock;}
+    return null;
   };
 
   const getPembelianTotal = () => {
@@ -20,6 +24,7 @@ export default function Dashboard() {
   };
 
   const getStockAkhirTotal = () => {
+    if(book)return inventoryCheck(book,monthEnd(periode)).stock;
     const snapshots = state.stockSnapshots.filter(s => s.periode === periode);
     return snapshots.reduce((sum, s) => sum + s.nilaiTotal, 0);
   };
@@ -79,6 +84,7 @@ export default function Dashboard() {
   };
 
   const stockAwalTotal = getStockAwalTotal();
+  const usageTotal=book?book.movements.filter(m=>m.type==='usage'&&m.date.startsWith(periode)).reduce((s,m)=>s+m.outValue,0):null;
 
   return (
     <div className="space-y-6">
@@ -101,21 +107,21 @@ export default function Dashboard() {
       <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
         <div className="flex items-center gap-2">
           <AlertCircle className="w-5 h-5 text-yellow-600" />
-          <span className="font-semibold text-yellow-800">HPP BELUM SIAP DIHITUNG</span>
+          <span className="font-semibold text-yellow-800">{book?'HPP BAHAN TERINTEGRASI':'HPP BELUM SIAP DIHITUNG'}</span>
         </div>
         <div className="mt-2 flex gap-4 text-sm">
           <span className={stockAwalTotal === null ? 'text-red-600' : 'text-green-600'}>
             Stock Awal {stockAwalTotal === null ? '❌' : '✅'}
           </span>
-          <span className={pembelianCount === 0 ? 'text-red-600' : 'text-green-600'}>
-            Pembelian {pembelianCount === 0 ? '❌' : '✅'}
+          <span className={!book&&pembelianCount === 0 ? 'text-red-600' : 'text-green-600'}>
+            Pembelian {!book&&pembelianCount === 0 ? '❌' : '✅'}
           </span>
           <span className="text-green-600">
             Stock Akhir ✅
           </span>
         </div>
         <p className="mt-1 text-xs text-yellow-700">
-          Data Stock Awal bulan ini belum tersedia. HPP akan dihitung setelah semua komponen lengkap.
+          {book?'HPP bahan dihitung dari mutasi pemakaian dengan moving average. Verifikasi saldo awal sebelum laporan final.':'Data stock awal belum tersedia. Aktifkan buku terintegrasi untuk HPP berdasarkan mutasi pemakaian.'}
         </p>
       </div>
 
@@ -170,8 +176,8 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-xs text-gray-500 uppercase">Estimasi HPP</p>
-              <p className="text-lg font-bold text-gray-900">N/A</p>
-              <p className="text-xs text-gray-500">Menunggu data lengkap</p>
+              <p className="text-lg font-bold text-gray-900">{usageTotal===null?'N/A':formatRupiah(usageTotal)}</p>
+              <p className="text-xs text-gray-500">{book?'Pemakaian tercatat':'Menunggu aktivasi buku'}</p>
             </div>
           </div>
         </div>

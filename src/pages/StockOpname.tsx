@@ -1,17 +1,21 @@
 import React, { useState } from 'react';
 import { useApp } from '../store';
+import { useBooks } from '../books';
+import { today } from '../lib/accounting';
 import { StockOpnameItem } from '../types';
 import { ClipboardCheck, Save, AlertTriangle } from 'lucide-react';
 
 export default function StockOpnamePage() {
   const { state, dispatch, addAuditLog, getCurrentStock, isPeriodClosed } = useApp();
+  const {commitAction,busy}=useBooks();
+  const [date,setDate]=useState(today());
   const [selectedGudang, setSelectedGudang] = useState(state.gudang[0]?.id || '');
-  const [selectedPeriode, setSelectedPeriode] = useState('2026-09');
+  const [selectedPeriode, setSelectedPeriode] = useState(state.selectedPeriode);
   const [petugas, setPetugas] = useState('');
   const [items, setItems] = useState<StockOpnameItem[]>([]);
   const [isEditing, setIsEditing] = useState(false);
 
-  const gudangBarang = state.barang.filter(b => b.lokasiGudang === selectedGudang && b.statusAktif);
+  const gudangBarang = state.barang.filter(b => b.statusAktif && (b.lokasiGudang===selectedGudang || (getCurrentStock(b.id,selectedGudang)??0)>0));
 
   const startOpname = () => {
     const existingItems: StockOpnameItem[] = gudangBarang.map(b => {
@@ -37,7 +41,7 @@ export default function StockOpnamePage() {
     setItems(newItems);
   };
 
-  const saveOpname = () => {
+  const saveOpname = async () => {
     if (!petugas) {
       alert('Masukkan nama petugas!');
       return;
@@ -46,38 +50,18 @@ export default function StockOpnamePage() {
     const opname = {
       id: 'so-' + Date.now(),
       periode: selectedPeriode,
-      tanggal: now.split('T')[0],
+      tanggal: date,
       gudangId: selectedGudang,
       petugas,
       items,
-      status: 'finalized' as const,
+      status: 'draft' as const,
       createdAt: now,
       updatedAt: now,
     };
-    dispatch({ type: 'ADD_STOCK_OPNAME', payload: opname });
-    addAuditLog('CREATE', 'stock_opname', opname.id, null, opname);
-
-    // Update stock snapshots
-    items.forEach(item => {
-      const barang = state.barang.find(b => b.id === item.barangId);
-      if (barang) {
-        dispatch({
-          type: 'ADD_STOCK_SNAPSHOT',
-          payload: {
-            barangId: item.barangId,
-            gudangId: selectedGudang,
-            periode: selectedPeriode,
-            quantity: item.stockFisik,
-            nilaiTotal: item.stockFisik * barang.hargaRataRata,
-            hargaRataRata: barang.hargaRataRata,
-            tanggal: now.split('T')[0],
-          }
-        });
-      }
-    });
-
+    if(date.slice(0,7)!==selectedPeriode){alert('Tanggal harus berada di periode opname.');return;}
+    try { await commitAction({type:'ADD_STOCK_OPNAME',payload:opname}); } catch(e){alert(e instanceof Error?e.message:'Simpan gagal');return;}
     setIsEditing(false);
-    alert('Stock Opname berhasil disimpan!');
+    alert('Draft opname disimpan. Stok berubah setelah persetujuan.');
   };
 
   const getSelisihColor = (selisih: number, stockSistem: number) => {
@@ -118,7 +102,7 @@ export default function StockOpnamePage() {
                 {closed ? 'Periode Ditutup' : 'Mulai Stock Opname'}
               </button>
             ) : (
-              <button onClick={saveOpname} className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm flex items-center justify-center gap-2">
+              <button disabled={busy} onClick={saveOpname} className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm flex items-center justify-center gap-2">
                 <Save className="w-4 h-4" /> Simpan
               </button>
             )}
@@ -133,6 +117,7 @@ export default function StockOpnamePage() {
         </div>
       )}
 
+      <label className="block text-sm">Tanggal pemeriksaan<input type="date" value={date} onChange={e=>setDate(e.target.value)} className="border rounded-lg ml-3 px-3 py-2" /></label>
       {/* Stock Opname Table */}
       {isEditing && (
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -207,7 +192,7 @@ export default function StockOpnamePage() {
                       <span className="text-gray-500 text-sm ml-2">- {so.tanggal}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-sm text-gray-600">Petugas: {so.petugas}</span>
+                      <span className="text-sm text-gray-600">Petugas: {so.petugas}</span>{so.status==='draft'&&['admin','finance'].includes(state.currentUser.role)&&<button disabled={busy} className="text-blue-700 underline" onClick={async()=>{try{await commitAction({type:'UPDATE_STOCK_OPNAME',payload:{...so,status:'finalized',updatedAt:new Date().toISOString()}});}catch(e){alert(e instanceof Error?e.message:'Persetujuan gagal');}}}>Setujui & posting</button>}
                       <span className={`px-2 py-0.5 rounded text-xs ${so.status === 'finalized' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
                         {so.status === 'finalized' ? 'Finalized' : 'Draft'}
                       </span>

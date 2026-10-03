@@ -3,8 +3,9 @@ import { MasterBarang, Gudang, StockOpname, Pembelian, StockSnapshot, AuditLog, 
 import { initialBarang, initialGudang, initialStockSnapshots, initialStockOpname, initialPembelian } from './data/initialData';
 import { isSupabaseConfigured } from './lib/supabase';
 import * as dbService from './services/database';
+import type { StockMovement } from './lib/accounting';
 
-interface AppState {
+export interface AppState {
   barang: MasterBarang[];
   gudang: Gudang[];
   stockOpname: StockOpname[];
@@ -12,6 +13,7 @@ interface AppState {
   transfers: Transfer[];
   adjustments: Adjustment[];
   stockSnapshots: StockSnapshot[];
+  stockMovements: StockMovement[];
   auditLogs: AuditLog[];
   periodClosings: PeriodClosing[];
   currentPage: PageType;
@@ -20,9 +22,10 @@ interface AppState {
   selectedPeriode: string;
   isSupabaseMode: boolean;
   isLoading: boolean;
+  loadError: string;
 }
 
-type Action =
+export type Action =
   | { type: 'SET_PAGE'; payload: PageType }
   | { type: 'SET_SELECTED_GUDANG'; payload: string }
   | { type: 'SET_SELECTED_PERIODE'; payload: string }
@@ -51,6 +54,7 @@ type Action =
   | { type: 'CLOSE_PERIOD'; payload: PeriodClosing };
 
 const initialState: AppState = {
+  loadError: '',
   barang: initialBarang,
   gudang: initialGudang,
   stockOpname: initialStockOpname,
@@ -58,17 +62,18 @@ const initialState: AppState = {
   transfers: [],
   adjustments: [],
   stockSnapshots: initialStockSnapshots,
+  stockMovements: [],
   auditLogs: [],
   periodClosings: [],
   currentPage: 'dashboard',
   currentUser: { nama: 'Admin', role: 'admin' },
   selectedGudang: 'all',
-  selectedPeriode: '2026-09',
+  selectedPeriode: '2026-10',
   isSupabaseMode: false,
   isLoading: true,
 };
 
-function reducer(state: AppState, action: Action): AppState {
+export function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'SET_PAGE':
       return { ...state, currentPage: action.payload };
@@ -170,6 +175,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             dbService.closingService.getAll(),
           ]);
 
+          for(const result of [gudangRes,barangRes,snapshotRes,opnameRes,pembelianRes,closingRes])if(result.error)throw Error(result.error.message);
           // Convert from DB format to app format
           const gudang: Gudang[] = (gudangRes.data || []).map((g: any) => ({
             id: g.id,
@@ -207,6 +213,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           }));
 
           const transferRes = await dbService.transferService.getAll();
+          if(transferRes.error)throw Error(transferRes.error.message);
           const transfers: Transfer[] = (transferRes.data || []).map((t: any) => ({
             id: t.id,
             nomorTransfer: t.nomor_transfer,
@@ -234,17 +241,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
           dispatch({
             type: 'LOAD_DATA',
             payload: {
-              gudang: gudang.length > 0 ? gudang : initialGudang,
-              barang: barang.length > 0 ? barang : initialBarang,
+              gudang,
+              barang,
               transfers: transfers.length > 0 ? transfers : [],
-              stockSnapshots: stockSnapshots.length > 0 ? stockSnapshots : initialStockSnapshots,
+              stockSnapshots,
+              stockOpname: (opnameRes.data || []).map((s:any)=>({id:s.id,periode:s.periode,tanggal:s.tanggal,gudangId:s.gudang_id,petugas:s.petugas,status:s.status,createdAt:s.created_at,updatedAt:s.updated_at,items:(s.items||[]).map((i:any)=>({barangId:i.barang_id,stockSistem:i.stock_sistem,stockFisik:i.stock_fisik,selisih:i.selisih,catatan:i.catatan||''}))})),
+              pembelian: (pembelianRes.data || []).map((p:any)=>({id:p.id,tanggal:p.tanggal,nomorNota:p.nomor_nota,supplier:p.supplier,gudangId:p.gudang_id,totalDiskon:p.total_diskon,pajak:p.pajak,total:p.total,catatan:p.catatan||'',status:p.status,createdAt:p.created_at,updatedAt:p.updated_at,createdBy:p.created_by,items:(p.items||[]).map((i:any)=>({barangId:i.barang_id,quantity:i.quantity,satuan:i.satuan,quantityDasar:i.quantity_dasar,hargaSatuan:i.harga_satuan,diskon:i.diskon,subtotal:i.subtotal}))})),
+              periodClosings: (closingRes.data || []).map((c:any)=>({id:c.id,periode:c.periode,gudangId:c.gudang_id,closedAt:c.closed_at,closedBy:c.closed_by,status:c.status})),
               isSupabaseMode: true,
+              loadError: '',
             }
           });
         } catch (error) {
           console.error('Error loading from Supabase:', error);
-          // Fallback to localStorage
-          loadFromLocalStorage();
+          dispatch({type:'LOAD_DATA',payload:{barang:[],gudang:[],stockSnapshots:[],stockOpname:[],pembelian:[],transfers:[],adjustments:[],periodClosings:[],stockMovements:[],isSupabaseMode:false,loadError:error instanceof Error?error.message:'Gagal membaca sumber Supabase'}});
         }
       } else {
         loadFromLocalStorage();
@@ -266,8 +276,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
     };
 
+    if(useSupabase&&!state.currentUser.id){dispatch({type:'SET_LOADING',payload:false});return;}
+    dispatch({type:'SET_LOADING',payload:true});
     loadData();
-  }, [useSupabase]);
+  }, [useSupabase,state.currentUser.id]);
 
   // Save to localStorage (when not using Supabase)
   useEffect(() => {
@@ -278,13 +290,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
         stockOpname: state.stockOpname,
         pembelian: state.pembelian,
         stockSnapshots: state.stockSnapshots,
+        stockMovements: state.stockMovements,
+        transfers: state.transfers,
+        adjustments: state.adjustments,
         auditLogs: state.auditLogs,
         periodClosings: state.periodClosings,
         currentUser: state.currentUser,
       };
       localStorage.setItem('laundry-stock-hpp', JSON.stringify(toSave));
     }
-  }, [useSupabase, state.barang, state.gudang, state.stockOpname, state.pembelian, state.stockSnapshots, state.auditLogs, state.periodClosings, state.currentUser, state.isLoading]);
+  }, [useSupabase, state.barang, state.gudang, state.stockOpname, state.pembelian, state.stockSnapshots, state.stockMovements, state.transfers, state.adjustments, state.auditLogs, state.periodClosings, state.currentUser, state.isLoading]);
 
   const addAuditLog = async (action: string, entityType: string, entityId: string, dataBefore?: any, dataAfter?: any, reason?: string) => {
     const log: AuditLog = {
@@ -310,6 +325,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const getCurrentStock = (barangId: string, gudangId: string): number | null => {
+    if (state.stockMovements.length) {
+      const movements = state.stockMovements.filter(m=>m.itemId===barangId && m.warehouseId===gudangId);
+      return movements.length ? movements[movements.length-1].balance : null;
+    }
     const snapshots = state.stockSnapshots
       .filter(s => s.barangId === barangId && s.gudangId === gudangId)
       .sort((a, b) => b.tanggal.localeCompare(a.tanggal));

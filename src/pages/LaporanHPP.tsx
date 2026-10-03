@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useApp } from '../store';
+import { useBooks } from '../books';
+import { stockBalance, monthEnd } from '../lib/accounting';
 import { FileDown, AlertCircle } from 'lucide-react';
 
 export default function LaporanHPPPage() {
   const { state } = useApp();
-  const [selectedPeriode, setSelectedPeriode] = useState('2026-09');
+  const {book}=useBooks();
+  const [selectedPeriode, setSelectedPeriode] = useState(state.selectedPeriode);
   const [selectedGudang, setSelectedGudang] = useState('all');
   const [selectedKategori, setSelectedKategori] = useState('');
 
@@ -20,6 +23,14 @@ export default function LaporanHPPPage() {
 
     barangList.forEach(barang => {
       gudangIds.forEach(gudangId => {
+        if(book){
+          const from=selectedPeriode+'-01',to=monthEnd(selectedPeriode),d=new Date(from+'T00:00:00Z');d.setUTCDate(d.getUTCDate()-1);
+          const opening=stockBalance(book,barang.id,gudangId,d.toISOString().slice(0,10)),closing=stockBalance(book,barang.id,gudangId,to);
+          const movements=book.movements.filter(m=>m.itemId===barang.id&&m.warehouseId===gudangId&&m.date>=from&&m.date<=to);
+          const usage=movements.filter(m=>m.type==='usage'),purchases=movements.filter(m=>m.type==='purchase'),ready=to>=book.cutoff;
+          results.push({barangId:barang.id,namaBarang:barang.nama,kategori:barang.kategori,gudangId,gudangNama:state.gudang.find(g=>g.id===gudangId)?.nama||'',satuan:barang.satuanDasar,stockAwal:ready?(opening?.balance??0):null,pembelian:ready?purchases.reduce((s,m)=>s+m.inQty,0):null,stockAkhir:ready?(closing?.balance??0):null,pemakaian:ready?usage.reduce((s,m)=>s+m.outQty,0):null,hargaRataRata:closing?.average??0,nilaiStockAkhir:ready?(closing?.valueBalance??0):null,nilaiHPP:ready?usage.reduce((s,m)=>s+m.outValue,0):null,status:ready?'ready':'incomplete',missingComponents:ready?[]:['Periode sebelum awal buku']});
+          return;
+        }
         // Stock Akhir for this period
         const stockAkhirSnap = state.stockSnapshots
           .filter(s => s.barangId === barang.id && s.gudangId === gudangId && s.periode === selectedPeriode)
@@ -110,6 +121,7 @@ export default function LaporanHPPPage() {
         </button>
       </div>
 
+      {book&&<p className="bg-blue-50 p-4 rounded-xl text-sm">HPP bahan berasal dari mutasi pemakaian (moving average). Opname, transfer, dan adjustment tercatat terpisah di Kartu Stok.</p>}
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <input type="month" value={selectedPeriode} onChange={e => setSelectedPeriode(e.target.value)} className="border rounded-lg px-3 py-2 text-sm" />

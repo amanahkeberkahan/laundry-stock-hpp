@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { useApp } from '../store';
+import { useBooks } from '../books';
 import { PembelianItem } from '../types';
 import { Plus, Trash2, FileText, X, Save } from 'lucide-react';
 
 export default function PembelianPage() {
   const { state, dispatch, addAuditLog, isPeriodClosed } = useApp();
+  const { commitAction, busy } = useBooks();
+  const [paymentAccount,setPaymentAccount] = useState('1000');
   const [showForm, setShowForm] = useState(false);
   const [tanggal, setTanggal] = useState(new Date().toISOString().split('T')[0]);
   const [nomorNota, setNomorNota] = useState('');
@@ -55,7 +58,7 @@ export default function PembelianPage() {
 
   const totalAll = items.reduce((sum, i) => sum + i.subtotal, 0);
 
-  const savePembelian = () => {
+  const savePembelian = async () => {
     if (!nomorNota || !supplier || items.length === 0) {
       alert('Lengkapi data pembelian!');
       return;
@@ -76,33 +79,13 @@ export default function PembelianPage() {
       totalDiskon: items.reduce((s, i) => s + i.diskon, 0),
       pajak: 0,
       total: totalAll,
-      catatan,
+      catatan, paymentAccount,
       status: 'active' as const,
       createdAt: now,
       updatedAt: now,
       createdBy: state.currentUser.nama,
     };
-    dispatch({ type: 'ADD_PEMBELIAN', payload: pembelian });
-    addAuditLog('CREATE', 'pembelian', pembelian.id, null, pembelian);
-
-    // Update stock snapshots
-    items.forEach(item => {
-      const barang = state.barang.find(b => b.id === item.barangId);
-      if (barang) {
-        dispatch({
-          type: 'ADD_STOCK_SNAPSHOT',
-          payload: {
-            barangId: item.barangId,
-            gudangId: gudangId,
-            periode: periode,
-            quantity: item.quantityDasar,
-            nilaiTotal: item.subtotal,
-            hargaRataRata: item.hargaSatuan,
-            tanggal: tanggal,
-          }
-        });
-      }
-    });
+    try { await commitAction({ type:'ADD_PEMBELIAN',payload:pembelian }); } catch(e) { alert(e instanceof Error?e.message:'Posting gagal');return; }
 
     // Reset form
     setShowForm(false);
@@ -113,10 +96,9 @@ export default function PembelianPage() {
     alert('Pembelian berhasil disimpan!');
   };
 
-  const voidPembelian = (id: string) => {
+  const voidPembelian = async (id: string) => {
     if (confirm('Void nota ini? Data tidak akan dihapus permanen.')) {
-      dispatch({ type: 'VOID_PEMBELIAN', payload: id });
-      addAuditLog('VOID', 'pembelian', id);
+      try { await commitAction({type:'VOID_PEMBELIAN',payload:id}); } catch(e) {alert(e instanceof Error?e.message:'Void gagal');}
     }
   };
 
@@ -209,6 +191,7 @@ export default function PembelianPage() {
               </div>
             </div>
 
+            <label className="block text-sm mb-4">Pembayaran<select className="border rounded-lg px-3 py-2 ml-3" value={paymentAccount} onChange={e=>setPaymentAccount(e.target.value)}>{[["1000","Kas"],["1001","Bank BRI"],["1002","Bank BSI"],["2001","Kredit / Hutang Usaha"]].map(([v,n])=><option key={v} value={v}>{n}</option>)}</select></label>
             {/* Items */}
             <div className="border rounded-lg overflow-hidden mb-4">
               <table className="w-full text-sm">
@@ -262,7 +245,7 @@ export default function PembelianPage() {
               <div className="text-lg font-bold">TOTAL: {formatRupiah(totalAll)}</div>
               <div className="flex gap-3">
                 <button onClick={() => setShowForm(false)} className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-50">Batal</button>
-                <button onClick={savePembelian} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">
+                <button disabled={busy} onClick={savePembelian} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">
                   <Save className="w-4 h-4" /> Simpan
                 </button>
               </div>

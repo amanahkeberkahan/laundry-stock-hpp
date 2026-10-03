@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useApp } from '../store';
+import { useBooks } from '../books';
 import { Adjustment, AdjustmentItem } from '../types';
 import { Plus, CheckCircle, XCircle, Clock, AlertTriangle, FileText } from 'lucide-react';
 
 export default function AdjustmentPage() {
   const { state, dispatch, addAuditLog, getCurrentStock } = useApp();
+  const {commitAction,busy}=useBooks();
   const [showForm, setShowForm] = useState(false);
   const [nomorAdjustment, setNomorAdjustment] = useState('');
   const [tanggal, setTanggal] = useState(new Date().toISOString().split('T')[0]);
@@ -55,7 +57,7 @@ export default function AdjustmentPage() {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!nomorAdjustment || !gudangId || !petugas || items.length === 0) {
       alert('Lengkapi semua data adjustment!');
       return;
@@ -89,7 +91,7 @@ export default function AdjustmentPage() {
       updatedAt: now,
     };
 
-    dispatch({ type: 'ADD_ADJUSTMENT', payload: adjustment });
+    try { await commitAction({ type: 'ADD_ADJUSTMENT', payload: adjustment }); } catch(e) {alert(e instanceof Error?e.message:'Posting gagal');return;}
     addAuditLog('CREATE', 'adjustment', adjustment.id, null, adjustment);
 
     // Reset form
@@ -103,53 +105,30 @@ export default function AdjustmentPage() {
     alert('Adjustment berhasil dibuat! Menunggu persetujuan.');
   };
 
-  const handleApprove = (adjustmentId: string) => {
+  const handleApprove = async (adjustmentId: string) => {
     if (!confirm('Setujui adjustment ini? Stock akan disesuaikan.')) return;
 
     const adjustment = state.adjustments.find(a => a.id === adjustmentId);
     if (!adjustment) return;
 
-    // Update stock snapshots based on adjustment
-    const now = new Date().toISOString();
-    const today = now.split('T')[0];
-    const periode = today.substring(0, 7);
 
-    for (const item of adjustment.items) {
-      const barang = state.barang.find(b => b.id === item.barangId);
-      if (!barang) continue;
-
-      // Update stock to quantitySesudah
-      dispatch({
-        type: 'ADD_STOCK_SNAPSHOT',
-        payload: {
-          barangId: item.barangId,
-          gudangId: adjustment.gudangId,
-          periode,
-          quantity: item.quantitySesudah,
-          nilaiTotal: item.quantitySesudah * barang.hargaRataRata,
-          hargaRataRata: barang.hargaRataRata,
-          tanggal: today,
-        }
-      });
-    }
-
-    dispatch({
+    try { await commitAction({
       type: 'APPROVE_ADJUSTMENT',
       payload: { id: adjustmentId, approvedBy: state.currentUser.nama }
-    });
+    }); } catch(e) {alert(e instanceof Error?e.message:'Posting gagal');return;}
 
     addAuditLog('APPROVE', 'adjustment', adjustmentId, { status: 'pending' }, { status: 'approved' });
     alert('Adjustment disetujui! Stock sudah disesuaikan.');
   };
 
-  const handleReject = (adjustmentId: string) => {
+  const handleReject = async (adjustmentId: string) => {
     const reason = prompt('Alasan penolakan:');
     if (!reason) return;
 
-    dispatch({
+    try { await commitAction({
       type: 'REJECT_ADJUSTMENT',
       payload: { id: adjustmentId, rejectedBy: state.currentUser.nama, reason }
-    });
+    }); } catch(e) {alert(e instanceof Error?e.message:'Posting gagal');return;}
 
     addAuditLog('REJECT', 'adjustment', adjustmentId, { status: 'pending' }, { status: 'rejected', reason });
     alert('Adjustment ditolak.');

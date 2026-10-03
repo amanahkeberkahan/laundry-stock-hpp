@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useApp } from '../store';
+import { useBooks } from '../books';
 import { Transfer, TransferItem } from '../types';
 import { ArrowRightLeft, Plus, Truck, CheckCircle, XCircle, Package } from 'lucide-react';
 
 export default function TransferPage() {
   const { state, dispatch, addAuditLog, getCurrentStock } = useApp();
+  const {commitAction,busy}=useBooks();
   const [showForm, setShowForm] = useState(false);
   const [nomorTransfer, setNomorTransfer] = useState('');
   const [tanggal, setTanggal] = useState(new Date().toISOString().split('T')[0]);
@@ -58,7 +60,7 @@ export default function TransferPage() {
     setItems(items.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!nomorTransfer || !gudangAsalId || !gudangTujuanId || !petugas || items.length === 0) {
       alert('Lengkapi semua data transfer!');
       return;
@@ -99,7 +101,7 @@ export default function TransferPage() {
       updatedAt: now,
     };
 
-    dispatch({ type: 'ADD_TRANSFER', payload: transfer });
+    try { await commitAction({ type: 'ADD_TRANSFER', payload: transfer }); } catch(e) {alert(e instanceof Error?e.message:'Posting gagal');return;}
     addAuditLog('CREATE', 'transfer', transfer.id, null, transfer);
 
     // Reset form
@@ -120,70 +122,20 @@ export default function TransferPage() {
     const transfer = state.transfers.find(t => t.id === transferId);
     if (!transfer) return;
 
-    // Update stock snapshots
-    const now = new Date().toISOString();
-    const today = now.split('T')[0];
-    const periode = today.substring(0, 7);
 
-    for (const item of transfer.items) {
-      const barang = state.barang.find(b => b.id === item.barangId);
-      if (!barang) continue;
-
-      // Reduce stock at source
-      const stockAsal = getCurrentStock(item.barangId, transfer.gudangAsalId);
-      if (stockAsal !== null) {
-        dispatch({
-          type: 'ADD_STOCK_SNAPSHOT',
-          payload: {
-            barangId: item.barangId,
-            gudangId: transfer.gudangAsalId,
-            periode,
-            quantity: stockAsal - item.quantityDasar,
-            nilaiTotal: (stockAsal - item.quantityDasar) * barang.hargaRataRata,
-            hargaRataRata: barang.hargaRataRata,
-            tanggal: today,
-          }
-        });
-      }
-
-      // Increase stock at destination
-      const stockTujuan = getCurrentStock(item.barangId, transfer.gudangTujuanId);
-      const newStockTujuan = (stockTujuan || 0) + item.quantityDasar;
-      dispatch({
-        type: 'ADD_STOCK_SNAPSHOT',
-        payload: {
-          barangId: item.barangId,
-          gudangId: transfer.gudangTujuanId,
-          periode,
-          quantity: newStockTujuan,
-          nilaiTotal: newStockTujuan * barang.hargaRataRata,
-          hargaRataRata: barang.hargaRataRata,
-          tanggal: today,
-        }
-      });
-    }
-
-    dispatch({
+    try { await commitAction({
       type: 'UPDATE_TRANSFER',
-      payload: { ...transfer, status: 'completed', updatedAt: now }
-    });
+      payload: { ...transfer, status: 'completed', updatedAt: new Date().toISOString() }
+    }); } catch(e) {alert(e instanceof Error?e.message:'Posting gagal');return;}
 
-    addAuditLog('COMPLETE', 'transfer', transferId, { status: transfer.status }, { status: 'completed' });
-    alert('Transfer berhasil diselesaikan!');
+    alert('Transfer selesai. Mutasi asal dan tujuan tercatat.');
   };
 
-  const handleCancel = (transferId: string) => {
-    if (!confirm('Batalkan transfer ini?')) return;
-
-    const transfer = state.transfers.find(t => t.id === transferId);
-    if (!transfer) return;
-
-    dispatch({
-      type: 'UPDATE_TRANSFER',
-      payload: { ...transfer, status: 'cancelled', updatedAt: new Date().toISOString() }
-    });
-
-    addAuditLog('CANCEL', 'transfer', transferId, { status: transfer.status }, { status: 'cancelled' });
+  const handleCancel = async (transferId:string) => {
+    const transfer=state.transfers.find(t=>t.id===transferId);
+    if(!transfer || !['pending','in_transit'].includes(transfer.status))return;
+    if(!confirm('Batalkan transfer yang belum selesai?'))return;
+    try{await commitAction({type:'UPDATE_TRANSFER',payload:{...transfer,status:'cancelled',updatedAt:new Date().toISOString()}});}catch(e){alert(e instanceof Error?e.message:'Pembatalan gagal');}
   };
 
   const formatRupiah = (val: number) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(val);

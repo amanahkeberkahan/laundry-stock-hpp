@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AppProvider, useApp } from './store';
 import { PageType } from './types';
-import Dashboard from './pages/Dashboard';
+const Dashboard=React.lazy(()=>import('./pages/Dashboard'));
 import MasterBarangPage from './pages/MasterBarang';
 import StockOpnamePage from './pages/StockOpname';
 import PembelianPage from './pages/Pembelian';
@@ -11,6 +11,11 @@ import LaporanHPPPage from './pages/LaporanHPP';
 import LaporanStockPage from './pages/LaporanStock';
 import { GudangPage, ClosingPage, SettingsPage } from './pages/OtherPages';
 import LoginPage from './pages/LoginPage';
+const Finance=React.lazy(()=>import('./pages/Finance'));
+const Assets=React.lazy(()=>import('./pages/Assets'));
+import { BooksProvider, useBooks } from './books';
+const Accounting=React.lazy(()=>import('./pages/Accounting'));
+import StockHistory, { UsagePage } from './pages/StockHistory';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
 import {
   LayoutDashboard,
@@ -33,23 +38,35 @@ import {
   HardDrive,
 } from 'lucide-react';
 
-const NAV_ITEMS: { id: PageType; label: string; icon: any }[] = [
+const NAV_ITEMS: { id: PageType; label: string; icon: any; group?: string }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'stock', label: 'Stock', icon: Boxes },
+  { id: 'stock', label: 'Posisi Stok', icon: Boxes, group: 'Persediaan' },
+  { id: 'movements', label: 'Mutasi Stok', icon: ArrowRightLeft },
+  { id: 'stock-card', label: 'Kartu Stok', icon: FileText },
+  { id: 'usage', label: 'Pemakaian Bahan', icon: Package },
   { id: 'stock-opname', label: 'Stock Opname', icon: ClipboardCheck },
   { id: 'pembelian', label: 'Pembelian', icon: ShoppingCart },
   { id: 'transfer', label: 'Transfer Gudang', icon: ArrowRightLeft },
   { id: 'adjustment', label: 'Adjustment', icon: Sliders },
   { id: 'master-barang', label: 'Master Barang', icon: Package },
   { id: 'gudang', label: 'Gudang', icon: Warehouse },
+  { id: 'finance-transactions', label: 'Transaksi & Review', icon: FileText, group: 'Keuangan' },
+  { id: 'finance-reconciliation', label: 'Rekonsiliasi Bank', icon: ArrowRightLeft },
+  { id: 'accounts', label: 'Master Akun', icon: FileText },
+  { id: 'journals', label: 'Jurnal Umum', icon: FileText },
+  { id: 'ledger', label: 'Buku Besar', icon: FileText },
+  { id: 'trial', label: 'Neraca Saldo', icon: FileText },
+  { id: 'assets', label: 'Aset & Penyusutan', icon: Warehouse },
+  { id: 'finance-reports', label: 'Laporan Keuangan', icon: BarChart3, group: 'Laporan' },
+  { id: 'finance-draft', label: 'Pembanding Draft Excel', icon: FileText },
   { id: 'laporan-hpp', label: 'Laporan HPP', icon: BarChart3 },
-  { id: 'laporan-stock', label: 'Laporan Stock', icon: FileText },
   { id: 'closing', label: 'Closing Bulanan', icon: Lock },
-  { id: 'settings', label: 'Settings', icon: Settings },
+  { id: 'settings', label: 'Pengaturan', icon: Settings, group: 'Administrasi' },
 ];
 
 function AppContent() {
-  const { state, dispatch, syncFromSupabase } = useApp();
+  const { state, dispatch } = useApp();
+  const { reload, error:bookError } = useBooks();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
@@ -164,6 +181,16 @@ function AppContent() {
       case 'laporan-stock': return <LaporanStockPage />;
       case 'closing': return <ClosingPage />;
       case 'settings': return <SettingsPage />;
+      case 'assets': return <Assets />;
+      case 'finance-transactions':
+      case 'finance-reconciliation':
+      case 'finance-coa': return <Finance page={state.currentPage} />;
+      case 'finance-reports': return <Accounting page="statements" />;
+      case 'finance-draft': return <Finance page="finance-reports" />;
+      case 'journals': case 'ledger': case 'trial': case 'accounts': return <Accounting page={state.currentPage} />;
+      case 'movements': return <StockHistory />;
+      case 'stock-card': return <StockHistory card />;
+      case 'usage': return <UsagePage />;
       default: return <Dashboard />;
     }
   };
@@ -176,7 +203,7 @@ function AppContent() {
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-200 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+      <aside id="navigation" aria-label="Navigasi utama" className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 flex-col ${sidebarOpen ? 'flex' : 'hidden lg:flex'}`}>
         {/* Logo */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -184,8 +211,8 @@ function AppContent() {
               <Shirt className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="font-bold text-gray-900 text-sm">Laundry Stock</h1>
-              <p className="text-xs text-gray-500">& HPP Management</p>
+              <h1 className="font-bold text-gray-900 text-sm">Pradhana Laundry</h1>
+              <p className="text-xs text-gray-500">Persediaan & Keuangan</p>
             </div>
           </div>
         </div>
@@ -193,11 +220,15 @@ function AppContent() {
         {/* Navigation */}
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {NAV_ITEMS.map(item => {
+            if ((item.id.startsWith('finance-') || item.id === 'assets') && !['admin','finance','owner'].includes(state.currentUser.role)) return null;
             const Icon = item.icon;
             const isActive = state.currentPage === item.id;
             return (
+              <React.Fragment key={item.id}>
+              {item.group && <p className="px-3 pt-4 pb-1 text-xs font-semibold text-gray-400 uppercase tracking-wide">{item.group}</p>}
               <button
                 key={item.id}
+                aria-current={isActive ? 'page' : undefined}
                 onClick={() => { dispatch({ type: 'SET_PAGE', payload: item.id }); setSidebarOpen(false); }}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                   isActive
@@ -208,6 +239,7 @@ function AppContent() {
                 <Icon className="w-5 h-5" />
                 {item.label}
               </button>
+              </React.Fragment>
             );
           })}
         </nav>
@@ -245,19 +277,18 @@ function AppContent() {
       <main className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
         <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between lg:px-6">
-          <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 hover:bg-gray-100 rounded-lg">
+          <button aria-label="Buka menu" aria-controls="navigation" aria-expanded={sidebarOpen} onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 hover:bg-gray-100 rounded-lg">
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-3">
-            <select
+            {!state.currentPage.startsWith('finance-') && <>
+            <input
+              type="month"
+              aria-label="Periode persediaan"
               value={state.selectedPeriode}
               onChange={(e) => dispatch({ type: 'SET_SELECTED_PERIODE', payload: e.target.value })}
               className="border rounded-lg px-3 py-1.5 text-sm bg-white"
-            >
-              <option value="2026-09">September 2026</option>
-              <option value="2026-08">Agustus 2026</option>
-              <option value="2026-07">Juli 2026</option>
-            </select>
+            />
             <select
               value={state.selectedGudang}
               onChange={(e) => dispatch({ type: 'SET_SELECTED_GUDANG', payload: e.target.value })}
@@ -266,9 +297,11 @@ function AppContent() {
               <option value="all">Semua Gudang</option>
               {state.gudang.map(g => <option key={g.id} value={g.id}>{g.nama}</option>)}
             </select>
+            </>}
+            {state.currentPage.startsWith('finance-') && <span className="text-sm text-gray-600">Keuangan · BRI & BSI</span>}
             {useSupabase && (
               <button
-                onClick={syncFromSupabase}
+                onClick={()=>void reload()}
                 className="p-2 hover:bg-gray-100 rounded-lg"
                 title="Sync from Supabase"
               >
@@ -280,7 +313,7 @@ function AppContent() {
 
         {/* Page Content */}
         <div className="flex-1 overflow-y-auto p-4 lg:p-6">
-          {renderPage()}
+          {bookError && <p role="alert" className="bg-red-50 text-red-800 p-3 rounded-lg mb-4">{bookError}</p>}<React.Suspense fallback={<p role="status">Memuat modul...</p>}>{renderPage()}</React.Suspense>
         </div>
       </main>
     </div>
@@ -290,7 +323,7 @@ function AppContent() {
 export default function App() {
   return (
     <AppProvider>
-      <AppContent />
+      <BooksProvider><AppContent /></BooksProvider>
     </AppProvider>
   );
 }
